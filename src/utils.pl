@@ -10,6 +10,8 @@ Provides some utility functions useful for the solutions.
                   number_string/2
                  ]).
 
+:- meta_predicate filter(1, ?, ?).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                            File parsing DCGs                               %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
