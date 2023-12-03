@@ -1,7 +1,14 @@
-:- use_module('../utils.pl').
+:- use_module(utils).
+
+run :-
+  format("Solving day 3~n", []),
+  time(solve1('inputs/3.txt', Sol1)),
+  format("Solution 1: ~q~n", [Sol1]),
+  time(solve2('inputs/3.txt', Sol2)),
+  format("Solution 2: ~q~n", [Sol2]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%                                 Part 2                                     %%
+%%                                 Part 1                                     %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % eagerly consume as many dots
@@ -12,6 +19,8 @@ dots(0) --> "".
 number([X|Y]) --> [X], { char_type(X, numeric) }, number(Y).
 number([]) --> "".
 
+% Given X-Y coordinates and the Length of the Value,
+% constraint the possible locations of symbols.
 adjacent(X-Y, Len, SymbolX-SymbolY) :-
     SymbolX #>= X - 1,
     SymbolX #=< X + Len,
@@ -28,14 +37,15 @@ solve1(X0, L0, s(Y0, Symbols0, Values0, Acc0), Res) :-
     phrase(dots(Dots), L0, LRest0),
     ( % end of line
 
-        LRest0 = "", !,
+        LRest0 = "",
         Y1 #= Y0 + 1,
         Res = s(Y1, Symbols0, Values0, Acc0) % finish line
 
     ; % number
 
       phrase(number(Num), LRest0, LRest1),
-      \+ Num = "", !,
+      \+ Num = "",
+      !, % don't retry and decrease the number, you got it right the first time!
       number_chars(Value, Num),
 
       % number boundaries
@@ -60,7 +70,8 @@ solve1(X0, L0, s(Y0, Symbols0, Values0, Acc0), Res) :-
 
     ; % symbol
 
-      LRest0 = [_|LRest1], % must be a symbol
+      LRest0 = [Char|LRest1], % must be a symbol
+      \+ char_type(Char, numeric),
       X1 #= X0 + Dots,
 
       % store new found symbol

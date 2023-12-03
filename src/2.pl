@@ -1,4 +1,11 @@
-:- use_module('../utils.pl').
+:- use_module(utils).
+
+run :-
+  format("Solving day 2~n", []),
+  time(solve1('inputs/2.txt', Sol1)),
+  format("Solution 1: ~q~n", [Sol1]),
+  time(solve2('inputs/2.txt', Sol2)),
+  format("Solution 2: ~q~n", [Sol2]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                                    DCGs                                    %%
