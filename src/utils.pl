@@ -5,6 +5,10 @@ Provides some utility functions useful for the solutions.
 :- module(utils, [lines//1,
                   line//1,
                   eos/2,
+                  seqof//2,
+                  seqof_//1,
+                  whitespace/1,
+                  numeric/1,
                   filter/3,
                   forlist/3,
                   number_string/2
@@ -25,9 +29,12 @@ Provides some utility functions useful for the solutions.
 % wrong? ;_;
 :- use_module(library(lists)).
 :- use_module(library(lambda)).
+:- use_module(library(dcgs)).
+:- use_module(library(charsio)).
 
 :- meta_predicate filter(1, ?, ?).
 :- meta_predicate forlist(?, 2, ?).
+:- meta_predicate seqof(1, ?).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                            File parsing DCGs                               %%
@@ -41,6 +48,12 @@ line([])     --> ( "\n" ; call(eos) ), !.
 line([L|Ls]) --> [L], line(Ls).
 
 eos([], []).
+
+seqof(P, S), [X] --> seq(S), {maplist(P, S)}, [X], { \+ call(P, X) }.
+seqof_(P) --> seqof(P,_).
+
+whitespace(' ').
+numeric(X) :- char_type(X, numeric).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                                 Lists                                      %%
