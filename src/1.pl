@@ -2,64 +2,49 @@
 
 run :-
   format("Solving day 1~n", []),
-  time(solve1('inputs/1.txt', Sol1)),
-  format("Solution 1: ~q~n", [Sol1]),
-  time(solve2('inputs/1.txt', Sol2)),
-  format("Solution 2: ~q~n", [Sol2]).
+  format("Part 1: ~n", []),
+  time(part1('inputs/1.txt', Sol1)),
+  format("   ", []), isok(Sol1, 54601),
+  format("Part 2: ~n", []),
+  time(part2('inputs/1.txt', Sol2)),
+  format("   ", []), isok(Sol2, 54078).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%                                    DCGs                                    %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+f(L,C,D) :-
+  phrase(seq(L), C, E),
+  L = [_|Ls],
+  append(Ls, E, D).
 
-% Data parsing DCGs
-first_digit(X) --> [Z], { char_type(Z, alpha) }, first_digit(X).
-first_digit(X) --> [X], { char_type(X, numeric) }, ... .
+num('1') --> f("one").
+num('2') --> f("two").
+num('3') --> f("three").
+num('4') --> f("four").
+num('5') --> f("five").
+num('6') --> f("six").
+num('7') --> f("seven").
+num('8') --> f("eight").
+num('9') --> f("nine").
 
-num('1') --> "one".
-num('2') --> "two".
-num('3') --> "three".
-num('4') --> "four".
-num('5') --> "five".
-num('6') --> "six".
-num('7') --> "seven".
-num('8') --> "eight".
-num('9') --> "nine".
+num/digit(Xs) -->
+  call(eos), {Xs = []}
+  ;
+  num(X), { Xs = [X|Xss] }, num/digit(Xss)
+  ;
+  [X], { numeric(X) }, num/digit(Xss), {Xs = [X|Xss]}
+  ;
+  [_], num/digit(Xs).
 
-first_num_or_digit(X) -->
-  ...,
-  ( [X], { char_type(X, numeric) }
-  ; num(X) ),
-  ... .
-first_num_or_digit_r(X) -->
-  ...,
-  ( [X], { char_type(X, numeric) }
-  ; seq(Z), { reverse(Z, Z1), phrase(num(X), Z1)} ),
-  ... .
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%                                   Part 1                                   %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-solve1(F, Res) :-
+part1(F, Solution) :-
   phrase_from_file(lines(Lines), F),
-  maplist(\L^Ls^(
-                 phrase(first_digit(X), L),
-                 reverse(L, L1),
-                 phrase(first_digit(Y), L1),
-                 number_chars(Ls, [X, Y])
-                ), Lines, Lines2),
-  sum_list(Lines2, Res).
+  maplist(\L^Num^(filter(numeric, L, [D|Ds]),
+                  reverse([D|Ds], [D2|_]),
+                  number_chars(Num, [D, D2])
+               ), Lines, Nums),
+  sum_list(Nums, Solution).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%                                   Part 2                                   %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-solve2(F, Res) :-
+part2(F, Solution) :-
   phrase_from_file(lines(Lines), F),
-  maplist(\L^Ls^(
-                 phrase(first_num_or_digit(X), L),
-                 reverse(L, L1),
-                 phrase(first_num_or_digit_r(Y), L1),
-                 number_chars(Ls, [X, Y])
-                ), Lines, Lines2),
-  sum_list(Lines2, Res).
+  maplist(\L^Num^(phrase(num/digit([X|Xs]), L),
+                  reverse([X|Xs], [Y|_]),
+                  number_chars(Num, [X, Y])
+                 ), Lines, Nums),
+  sum_list(Nums, Solution).

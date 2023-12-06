@@ -2,22 +2,12 @@
 
 run :-
   format("Solving day 3~n", []),
-  time(solve1('inputs/3.txt', Sol1)),
-  format("Solution 1: ~q~n", [Sol1]),
-  time(solve2('inputs/3.txt', Sol2)),
-  format("Solution 2: ~q~n", [Sol2]).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%                                 Part 1                                     %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% eagerly consume as many dots
-dots(N1) --> ".", dots(N), { N1 #= N + 1 }.
-dots(0) --> "".
-
-% eagerly consume as many digits
-number([X|Y]) --> [X], { char_type(X, numeric) }, number(Y).
-number([]) --> "".
+  format("Part 1: ~n", []),
+  time(part1('inputs/3.txt', Sol1)),
+  format("   ", []), isok(Sol1, 521515),
+  format("Part 2: ~n", []),
+  time(part2('inputs/3.txt', Sol2)),
+  format("   ", []), isok(Sol2, 69527306).
 
 % Given X-Y coordinates and the Length of the Value,
 % constraint the possible locations of symbols.
@@ -26,91 +16,75 @@ adjacent(X-Y, Len, SymbolX-SymbolY) :-
     SymbolX #=< X + Len,
     2 #> abs(Y - SymbolY).
 
-%% The solution
-solve1(F, Sol) :-
+part1(F, Sol) :-
     phrase_from_file(lines(Lines), F),
-    foldl(solve1, Lines, s(0, [], [], 0), s(_, _, _, Sol)).
+    foldl(part1, Lines, s(0, [], [], 0), s(_, _, _, Sol)).
 
-solve1(L, S, Res) :- solve1(0, L, S, Res).
+part1(Input, S, Res) :- part1(0, Input, S, Res).
 
-solve1(X0, L0, s(Y0, Symbols0, Values0, Acc0), Res) :-
-    phrase(dots(Dots), L0, LRest0),
-    ( % end of line
+part1(_, Input0, s(Y0, Symbols0, Values0, Acc0),  s(Y1, Symbols0, Values0, Acc0)) :-
+    phrase(seqof((=('.')), _), Input0, ""),
+    Y1 #= Y0 + 1.
+part1(X0, Input0, s(Y0, Symbols0, Values0, Acc0), Res) :-
+    phrase(seqof((=('.')), Dots), Input0, Input1),
+    length(Dots, DotsL),
 
-        LRest0 = "",
-        Y1 #= Y0 + 1,
-        Res = s(Y1, Symbols0, Values0, Acc0) % finish line
+    phrase(number(Value), Input1, Input2),
 
-    ; % number
+    % number boundaries
+    X1 #= X0 + DotsL, % starting point for number
+    number_chars(Value, Num),
+    length(Num, NumLength),
+    X2 #= X1 + NumLength, % next index
 
-      phrase(number(Num), LRest0, LRest1),
-      \+ Num = "",
-      !, % don't retry and decrease the number, you got it right the first time!
-      number_chars(Value, Num),
+    ( % number touches symbol
 
-      % number boundaries
-      X1 #= X0 + Dots, % starting point for number
-      length(Num, NumLength),
-      X2 #= X1 + NumLength, % next index
+      adjacent(X1-Y0, NumLength, SymbolX-SymbolY),
+      member(SymbolX-SymbolY, Symbols0),
 
-      ( % number touches symbol
+      Acc1 #= Acc0 + Value,
+      Values1 = Values0
 
-        adjacent(X1-Y0, NumLength, SymbolX-SymbolY),
-        member(SymbolX-SymbolY, Symbols0),
+    ; % number does not touch symbol yet
 
-        Acc1 #= Acc0 + Value,
-        solve1(X2, LRest1, s(Y0, Symbols0, Values0, Acc1), Res)
+      Values1 = [v(Value, X1-Y0, NumLength)|Values0],
+      Acc1 #= Acc0
+    ),
+    part1(X2, Input2, s(Y0, Symbols0, Values1, Acc1), Res).
 
-      ; % number does not touch symbol yet
+part1(X0, Input0, s(Y0, Symbols0, Values0, Acc0), Res) :-
+    phrase(seqof((=('.')), Dots), Input0, [_|Input2]),
+    length(Dots, DotsL),
 
-        Values1 = [v(Value, X1-Y0, NumLength)|Values0],
-        Acc1 #= Acc0,
-        solve1(X2, LRest1, s(Y0, Symbols0, Values1, Acc1), Res)
-      )
+    X1 #= X0 + DotsL,
 
-    ; % symbol
+    % store new found symbol
+    Symbols1 = [X1-Y0|Symbols0],
 
-      LRest0 = [Char|LRest1], % must be a symbol
-      \+ char_type(Char, numeric),
-      X1 #= X0 + Dots,
+    findall(v(Val, Vx-Vy),
+            (member(v(Val, Vx-Vy, Len), Values0), adjacent(Vx-Vy, Len, X1-Y0)),
+            Adjacents),
 
-      % store new found symbol
-      Symbols1 = [X1-Y0|Symbols0],
+    % for each, remove them from pending list and accumulate to the result
+    foldl((\V^(Acc-Vals)^(Acc2-Vals2)^(V = (v(Val, Vxy)),
+                                       Acc2 #= Acc + Val,
+                                       select(v(Val, Vxy, _),
+                                              Vals,
+                                              Vals2))),
+          Adjacents,
+          Acc0-Values0,
+          Acc1-Values1),
 
-      findall(v(Val, Vx-Vy),
-              (member(v(Val, Vx-Vy, Len), Values0), adjacent(Vx-Vy, Len, X1-Y0)),
-              Adjacents),
+    % move index one more (this symbol char)
+    X2 #= X1 + 1,
+    part1(X2, Input2, s(Y0, Symbols1, Values1, Acc1), Res).
 
-      % for each, remove them from pending list and accumulate to the result
-      foldl((\V^(Acc-Vals)^(Acc2-Vals2)^(V = (v(Val, Vxy)),
-                                         Acc2 #= Acc + Val,
-                                         select(v(Val, Vxy, _),
-                                                Vals,
-                                                Vals2))),
-            Adjacents,
-            Acc0-Values0,
-            Acc1-Values1),
-
-      % move index one more (this symbol char)
-      X2 #= X1 + 1,
-      solve1(X2, LRest1, s(Y0, Symbols1, Values1, Acc1), Res)
-    ).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%                                 Part 2                                     %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%% Ignores anything but numbers and '*'.
-boring(N1) --> [X],
-               { \+ (char_type(X, numeric);  X = (*)) },
-               boring(N),
-               { N1 #= N + 1 }.
-boring(0)  --> "".
+%% Part 2
 
 % The solution
-solve2(F, Sol) :-
+part2(F, Sol) :-
     phrase_from_file(lines(Lines), F),
-    foldl(solve2, Lines, s(0, [], []), s(_, _, Gears)),
+    foldl(part2, Lines, s(0, [], []), s(_, _, Gears)),
     maplist(\A^Res^( A = _-_-Vals, Vals = [V1, V2],
                      Res #= V1 * V2
                    ; Res #= 0),
@@ -118,84 +92,81 @@ solve2(F, Sol) :-
             GearResults),
     sum_list(GearResults, Sol).
 
-solve2(L, S, Res) :- solve2(0, L, S, Res).
-solve2(X0, L0, s(Y0, Values0, Gears0), Res) :-
-    phrase(boring(Dots), L0, LRest),
-    ( % end of line
+is_gear(*).
 
-      LRest = "", !,
-      Y1 #= Y0 + 1,
-      Res = s(Y1, Values0, Gears0) % finish line
+part2(L, S, Res) :- part2(0, L, S, Res).
+part2(_, Input0, s(Y0, Values0, Gears0), s(Y1, Values0, Gears0)) :-
+    phrase(seqof(\X^(\+ is_gear(X), char_type(X, ascii_punctuation)), _), Input0, ""),
+    Y1 #= Y0 + 1.
+part2(X0, Input0, s(Y0, Values0, Gears0), Res) :-
+    phrase(seqof(\X^(\+ is_gear(X), char_type(X, ascii_punctuation)), Dots), Input0, Input1),
+    length(Dots, DotsL),
 
-    ; % number
+    phrase(number(Value), Input1, Input2),
 
-      phrase(number(Num), LRest, LRest2),
-      \+ Num = "", !,
-      number_chars(Value, Num),
+    % number boundaries
+    X1 #= X0 + DotsL, % starting point for number
+    number_chars(Value, Num),
+    length(Num, NumLength),
+    X2 #= X1 + NumLength, % next index
 
-      % number boundaries
-      X1 #= X0 + Dots, % starting point for number
-      length(Num, NumLength),
-      X2 #= X1 + NumLength, % next index
+    % find touching gears
+    findall(X-Y-Nums,
+            ( adjacent(X1-Y0, NumLength, X-Y),
+              select(X-Y-Nums, Gears0, _)
+            ),
+            TouchingGears),
 
-      % find touching gears
-      findall(X-Y-Nums,
-              ( adjacent(X1-Y0, NumLength, X-Y),
-                select(X-Y-Nums, Gears0, _)
-              ),
-              TouchingGears),
+    % add this number to their adj lists
+    maplist(\A^B^(A = (X-Y-Nums), B = (X-Y-Nums1), Nums1 = [Value|Nums]),
+            TouchingGears,
+            NewTouchingGears),
 
-      % add this number to their adj lists
-      maplist(\A^B^(A = (X-Y-Nums), B = (X-Y-Nums1), Nums1 = [Value|Nums]),
-              TouchingGears,
-              NewTouchingGears),
+    % remove gears with 3 touching numbers already
+    filter(\A^(A = (X-Y-Nums), length(Nums, Len), Len #< 3),
+           NewTouchingGears,
+           NewTouchingGears1),
 
-      % remove gears with 3 touching numbers already
-      filter(\A^(A = (X-Y-Nums), length(Nums, Len), Len #< 3),
-             NewTouchingGears,
-             NewTouchingGears1),
+    % find non-touching gears
+    findall(X-Y-Nums,
+            ( select(X-Y-Nums, Gears0, _),
+              \+ member(X-Y-_, NewTouchingGears)
+            ),
+            NonTouchingGears),
 
-      % find non-touching gears
-      findall(X-Y-Nums,
-              ( select(X-Y-Nums, Gears0, _),
-                \+ member(X-Y-_, NewTouchingGears)
-              ),
-              NonTouchingGears),
+    % concat touching (filtered) and non-touching
+    append(NewTouchingGears1, NonTouchingGears, Gears1),
 
-      % concat touching (filtered) and non-touching
-      append(NewTouchingGears1, NonTouchingGears, Gears1),
+    % record the value
+    Values1 = [v(Value, X1-Y0, NumLength)|Values0],
 
-      % record the value
-      Values1 = [v(Value, X1-Y0, NumLength)|Values0],
+    % Remove values from far previous lines
+    filter(Y0+\V^(V = v(_, _-Y, _), 2 #> (Y0 - Y)), Values1, Values2),
 
-      % Remove values from far previous lines
-      filter(Y0+\V^(V = v(_, _-Y, _), 2 #> (Y0 - Y)), Values1, Values2),
+    part2(X2, Input2, s(Y0, Values2, Gears1), Res).
+part2(X0, Input0, s(Y0, Values0, Gears0), Res) :-
+    phrase(seqof(\X^(\+ is_gear(X), char_type(X, ascii_punctuation)), Dots), Input0, [*|Input2]),
+    length(Dots, DotsL),
 
-      solve2(X2, LRest2, s(Y0, Values2, Gears1), Res)
+    X1 #= X0 + DotsL,
 
-    ; % gear
+    % find all values known touching this gear
+    findall(Val,
+            ( adjacent(Vx-Vy, VL, X1-Y0),
+              member(v(Val, Vx-Vy, VL), Values0)
+            ),
+            TouchingValues),
 
-      LRest = [*|LRest2],
-      X1 #= X0 + Dots,
+    length(TouchingValues, LTouching),
 
-      % find all values known touching this gear
-      findall(Val,
-              ( adjacent(Vx-Vy, VL, X1-Y0),
-                member(v(Val, Vx-Vy, VL), Values0)
-              ),
-              TouchingValues),
+    % add this gear if it is not touching 3 values
+    ( LTouching #< 3,
+      Gears1 = [X1-Y0-TouchingValues|Gears0]
+    ; LTouching #>= 3,
+      Gears1 = Gears0
+    ),
 
-      length(TouchingValues, LTouching),
+    % move index one more (this gear char)
+    X2 #= X1 + 1,
 
-      % add this gear if it is not touching 3 values
-      ( LTouching #< 3,
-        Gears1 = [X1-Y0-TouchingValues|Gears0]
-      ; LTouching #>= 3,
-        Gears1 = Gears0
-      ),
-
-      % move index one more (this gear char)
-      X2 #= X1 + 1,
-
-      solve2(X2, LRest2, s(Y0, Values0, Gears1), Res)
-    ).
+    part2(X2, Input2, s(Y0, Values0, Gears1), Res).

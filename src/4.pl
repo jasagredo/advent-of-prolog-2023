@@ -2,14 +2,12 @@
 
 run :-
   format("Solving day 4~n", []),
-  time(solve1('inputs/4.txt', Sol1)),
-  format("Solution 1: ~q~n", [Sol1]),
-  time(solve2('inputs/4.txt', Sol2)),
-  format("Solution 2: ~q~n", [Sol2]).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%                                 DCGs                                       %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  format("Part 1: ~n", []),
+  time(part1('inputs/4.txt', Sol1)),
+  format("   ", []), isok(Sol1, 22897),
+  format("Part 2: ~n", []),
+  time(part2('inputs/4.txt', Sol2)),
+  format("   ", []), isok(Sol2, 5095824).
 
 % Must start with a number, so parse the spaces before calling this.
 numbers([]), "|" --> "|", !.
@@ -28,11 +26,7 @@ game(L) -->
     { findall(X, (member(X, N), member(X, M)), Matches),
       length(Matches, L) }.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%                                 Part 1                                     %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-solve1(File, Sol) :-
+part1(File, Sol) :-
     phrase_from_file(games(Games), File),
     maplist(\L^Sol^( L = 0, Sol #= 0
                    ; Sol #= 2 ^ (L - 1)),
@@ -40,11 +34,7 @@ solve1(File, Sol) :-
             Games1),
     sum_list(Games1, Sol).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%                                 Part 2                                     %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-solve2(File, Sol) :-
+part2(File, Sol) :-
     phrase_from_file(games(Games), File),
     same_length(Games, CardCounts),
     maplist(\1^true, CardCounts),
