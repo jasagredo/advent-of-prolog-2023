@@ -14,3 +14,21 @@ and avoiding "imperative style" prolog, and trying to avoid cuts.
 
 Any improvements or corrections you see on the code, please send them my way as
 only by correcting our previous knowledge we learn new stuff.
+
+## Tricks
+
+I found quite useful to have the following function around in my emacs as
+ediprolog does not work for me on Windows:
+
+``` emacs-lisp
+(defun javier/scryer ()
+  "Call scryer on save"
+  (when (eq major-mode 'prolog-mode)
+    (message "%s" (string-trim
+      (shell-command-to-string (format "scryer-prolog '%s' -g halt." buffer-file-name))))))
+
+(add-hook 'after-save-hook #'javier/scryer)
+```
+
+It shows on the minibuffer whether scryer complains on the current file, which
+makes it somewhat easier to find syntax errors and missing punctuation symbols.
