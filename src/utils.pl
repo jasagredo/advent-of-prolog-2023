@@ -20,6 +20,7 @@ Provides some utility functions useful for the solutions.
 :- use_module(library(dcgs)).
 :- use_module(library(charsio)).
 :- use_module(library(debug)).
+:- use_module(library(clpz)).
 
 :- meta_predicate filter(1, ?, ?).
 :- meta_predicate forlist(?, 2, ?).
