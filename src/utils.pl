@@ -20,14 +20,13 @@ Provides some utility functions useful for the solutions.
 :- use_module(library(dcgs)).
 :- use_module(library(charsio)).
 :- use_module(library(debug)).
-:- use_module(library(assoc)).
 
 :- meta_predicate filter(1, ?, ?).
 :- meta_predicate forlist(?, 2, ?).
 :- meta_predicate seqof(1, ?).
 :- meta_predicate foldl1(3, ?, ?).
-:- meta_predicate map_assoc_with_key(2, ?).
 :- meta_predicate seqDelimited(?, 1, ?).
+:- meta_predicate map_assoc_with_key(2, ?).
 
 ok(X) :- format("~q \33\[32mOK\33\[0m~n", [X]).
 ko(X, Y) :- format("~q \33\[31mFAIL (/= ~q)\33\[0m~n", [X, Y]).
@@ -84,11 +83,14 @@ number(X) --> number([], X).
 number(X, Z) --> [C], { char_type(C, numeric) }, number([C|X], Z).
 number(X, Z) --> { length(X, L), L #> 0, reverse(X, X1), number_chars(Z, X1) }.
 a_digit(X) --> [X], {char_type(X, numeric)}.
+word([X|Xs]) --> [X], { char_type(X, alnum) }, word(Xs).
+word([]) --> "".
 
 whitespace(' ').
 numeric(X) :- char_type(X, numeric).
 alpha(X) :- char_type(X, alpha).
 alnum(X) :- char_type(X, alnum).
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                                 Lists                                      %%
@@ -126,6 +128,8 @@ eq(X, Y) :- Y #= X.
 
 fst(X-_,X).
 snd(_-X,X).
+
+
 
 map_assoc_with_key(Pred, T) :-
     map_assoc_with_key_(T, Pred).
