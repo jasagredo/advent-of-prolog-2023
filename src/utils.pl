@@ -83,6 +83,7 @@ seqof_(P) --> seqof(P,_).
 number(X) --> number([], X).
 number(X, Z) --> [C], { char_type(C, numeric) }, number([C|X], Z).
 number(X, Z) --> { length(X, L), L #> 0, reverse(X, X1), number_chars(Z, X1) }.
+znumber(X) --> "-", number(Y), { X #= -Y }; number(X).
 a_digit(X) --> [X], {char_type(X, numeric)}.
 word([X|Xs]) --> [X], { char_type(X, alnum) }, word(Xs).
 word([]) --> "".
