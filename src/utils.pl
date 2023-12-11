@@ -49,19 +49,19 @@ eos([], []).
 
 eol --> ("\n"; call(eos)).
 
-:- op(900, fx, @).
+:- op(900, xfx, @).
 
 trunc(X1, X2) :- trunc(10, X1, X2), !.
 trunc(0, _, "...") :- !.
 trunc(_, [], []).
 trunc(N, [X|X1], [X|X2]) :- N1 #= N - 1, trunc(N1, X1, X2).
 
-@(G_0, In, Out) :-
-   trunc(100, In, In1),
-   format("dcg:call(~q) <- ~s~n", [G_0, In1]),
+@(N, G_0, In, Out) :-
+   trunc(N, In, In1),
+   format("dcg:call(~q) <- ~q~n", [G_0, In1]),
    phrase(G_0, In, Out),
-   trunc(100, Out, Out1),
-   format("dcg:exit(~q) -> ~s~n", [G_0, Out1]).
+   trunc(N, Out, Out1),
+   format("dcg:exit(~q) -> ~q~n", [G_0, Out1]).
 
 seqDelimited(_, _, []) --> eol.
 seqDelimited(_, Each, [S]) --> call(Each, S).
