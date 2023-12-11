@@ -141,3 +141,7 @@ map_assoc_with_key_(t(K,Val,_,L,R), Pred) :-
     map_assoc_with_key_(L, Pred),
     call(Pred, K, Val),
     map_assoc_with_key_(R, Pred).
+
+mat_at(X-Y, Mat, E) :-
+    nth0(X, Mat, L),
+    nth0(Y, L, E).
