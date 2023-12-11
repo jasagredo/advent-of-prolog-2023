@@ -1,5 +1,8 @@
 :- use_module(utils).
 
+sol1(6806).
+sol2(449).
+
 next(X-Y, '-', r, X-Y1, r) :- Y1 #= Y + 1.
 next(X-Y, '-', l, X-Y1, l) :- Y1 #= Y - 1.
 
@@ -41,8 +44,8 @@ run_(Mat, Idx, Positions, Sol) :-
     ; run_(Mat, Idx1, NextPositions, Sol)
     ).
 
-part1(Sol) :-
-    phrase_from_file(lines(Mat), 'inputs/10.txt'),
+part1(F, Sol) :-
+    phrase_from_file(lines(Mat), F),
 
     % Find S
     append([Pre, [L], _], Mat),
@@ -59,12 +62,8 @@ part1(Sol) :-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Jesus take the wheel
-
-% ignore everything that follows, I will come back and fix it
-
-part2(Res) :-
-    phrase_from_file(lines(Mat), 'inputs/10.txt'),
+part2(F, Res) :-
+    phrase_from_file(lines(Mat), F),
     append([Pre, [L], Post], Mat),
     append([Pre1, "S", Post1], L),
     length(Pre, X),
@@ -82,15 +81,23 @@ part2(Res) :-
 
     run2(Mat, Starts, Sol),
 
-    write(Sol), nl,
-    append([Pre1, "7", Post1], L1),
+    % Replace the "S" (I manually checked this, perhaps I could have computed it)
+    append([Pre1, "J", Post1], L1),
     append([Pre, [L1], Post], Mat1),
 
-    append([[X-(Y-dUMMY)|Starts], Sol], Sol1),
+    % Perhaps this is cheating, I remove the two starts that I don't want.
+    Y1 #= Y + 1,
+    select(X-(Y1-_), Starts, Starts1),
+    X1 #= X + 1,
+    select(X1-(Y-_), Starts1, Starts2),
+
+    append([[X-(Y-dUMMY)|Starts2], Sol], Sol1),
     maplist(\ (U-(V-_))^(U-V)^true, Sol1, Sol2),
-    !,
+
+    % Point in polygon by lines
     pip(Mat1, 0, Sol2, Res).
 
+% same as run but accumulates the solutions instead of just returning a number
 run2(Mat, Positions, Sol) :-
     run2_(Mat, 1, Positions, Sol).
 run2_(Mat, Idx, Positions, Sol) :-
@@ -107,73 +114,14 @@ run2_(Mat, Idx, Positions, Sol) :-
       append(NextPositions, NextNext, Sol)
     ).
 
-qes([X|Xs]) --> [X], qes(Xs).
-qes([]) --> [].
-
-count([], 0).
-count([Y, W|Nx], Count) :-
-    count(Nx, Count1),
-    Count #= Count1 + (W - Y - 1).
-
-all_dash(Mat, N, [X|Xs]) :-
-    mat_at(N-X, Mat, '-'),
-    all_dash(Mat, N, Xs).
-all_dash(_, _, []).
-
-crossing(Mat, N, Crossing) -->
-    [X],
-    { mat_at(N-X, Mat, 'L') },
-    qes(S),
-    {  all_dash(Mat, N, S) },
-    [Y],
-    { mat_at(N-Y, Mat, 'J') },
-    crossing(Mat, N, Crossing).
-crossing(Mat, N, [X,Y|Crossing]) -->
-    [X],
-    { mat_at(N-X, Mat, 'L') },
-    qes(S),
-    { all_dash(Mat, N, S) },
-    [Y],
-    { mat_at(N-Y, Mat, '7') },
-    crossing(Mat, N, Crossing).
-crossing(Mat, N, [X, Y|Crossing]) -->
-    [X],
-    { mat_at(N-X, Mat, 'F')},
-    qes(S),
-    { all_dash(Mat, N, S) },
-    [Y],
-    { mat_at(N-Y, Mat, 'J') },
-    crossing(Mat, N, Crossing).
-crossing(Mat, N, Crossing) -->
-    [X],
-    { mat_at(N-X, Mat, 'F')},
-    qes(S),
-    {  all_dash(Mat, N, S) },
-    [Y],
-    { mat_at(N-Y, Mat, '7') },
-    crossing(Mat, N, Crossing).
-crossing(Mat, N, [X|Crossing]) -->
-    [X],
-    { mat_at(N-X, Mat, '|') },
-    crossing(Mat, N, Crossing).
-crossing(Mat, N, Crossing) --> [_], crossing(Mat, N, Crossing).
-crossing(_, _, []) --> [].
-
-
-
-w(off, '|', _, on).
-w(off, 'F', _, on).
-
-foo('|', Yy, X, Y, This) :-
-    This #= Y - X - 1.
-foo(Xx, '|', X, Y, This) :-
-    This #= Y - X - 1.
-foo('J', 'F', X, Y, This) :-
-    This #= Y - X - 1.
-foo('7', 'L', X, Y, This) :-
-    This #= Y - X - 1.
-foo(_, _, _, _, 0).
-
+% Generate the structs. The resulting list contains:
+%
+% - X-bar = a vertical bar at position X
+%
+% - X-(Y-cross) = a crossing line from X to Y
+%
+% - X-(Y-nocross) = a noncrossing line from X to Y
+%
 structs(_, [], []).
 structs(Line, [X|More], [X-bar|Next] ) :-
     nth0(X, Line, '|'),
@@ -203,47 +151,30 @@ structs(Line, [X, Y|More], [X-(Y-cross)|Next]) :-
     nth0(Y, Line, 'J'),
     structs(Line, More, Next).
 
+% Process the structs accumulating the number of ON tiles
 procStructs(_, [], 0).
 procStructs(_, [_], 0).
+
 procStructs(off, [X-bar, Y-Sth|More], This) :-
     procStructs(on, [Y-Sth|More], Next),
-    This #= Y - X - 1 + Next,
-    (This #> Next, format("~d-bar, adds to ~d~n", [X, This]); true).
-procStructs(on, [X-bar, Y-Sth|More], Next) :-
+    This #= Y - X - 1 + Next.
+procStructs(on, [_-bar, Y-Sth|More], Next) :-
     procStructs(off, [Y-Sth|More], Next).
 
-procStructs(off, [X-(Y-cross), Z-Sth|More], This) :-
+procStructs(off, [_-(Y-cross), Z-Sth|More], This) :-
     procStructs(on, [Z-Sth|More], Next),
-    This #= Z - Y - 1 + Next,
-
-    (This #> Next, format("~d-~d-cross, adds to ~d~n", [X, Y, This]); true).
-procStructs(on, [X-(Y-cross), Z-Sth|More], Next) :-
+    This #= Z - Y - 1 + Next.
+procStructs(on, [_-(_-cross), Z-Sth|More], Next) :-
     procStructs(off, [Z-Sth|More], Next).
 
-procStructs(off, [X-(Y-nocross), Z-Sth|More], Next) :-
+procStructs(off, [_-(_-nocross), Z-Sth|More], Next) :-
     procStructs(off, [Z-Sth|More], Next).
-procStructs(on, [X-(Y-nocross), Z-Sth|More], This) :-
+procStructs(on, [_-(Y-nocross), Z-Sth|More], This) :-
     procStructs(on, [Z-Sth|More], Next),
-    This #= Z - Y - 1 + Next,
+    This #= Z - Y - 1 + Next.
 
-    (This #> Next, format("~d-~d-nocross, adds to ~d~n", [X, Y, This]); true).
-
-count2(_, _, [], []).
-count2(_, _, [_], []).
-count2(W, Line, [X, Y|More], Sol) :-
-    nth0(X, Line, Xx),
-    nth0(Y, Line, Yy),
-    w(W, Xx, Yy, NW),
-    foo(Xx, Yy, X, Y, This),
-    %% ( ( Xx = '|' ; Yy = '|'), This #= (Y - X) - 1
-    %% ; This #= 0
-    %% ),
-    count2(Line, [Y|More], NextSol),
-    ( This #= 0, Sol = NextSol
-    ; Sol = [(X-Y)-This|NextSol] ).
-
-% Ray tracing for Point in Polygon
-pip(_, 140, _, 0).
+% Ray casting for Point in Polygon
+pip(Mat, N, _, 0) :- length(Mat, N).
 pip(Mat, N, Graph, Sol) :-
     % get the edges in this line
     filter( N +\ (N-_)^true, Graph, ThisLine ),
@@ -252,15 +183,15 @@ pip(Mat, N, Graph, Sol) :-
     % sort them
     list_to_ord_set(ThisLine1, Sorted),
 
+    % get this line of matrix
     nth0(N, Mat, Line),
+
+    % get the structs in this line
     structs(Line, Sorted, Structs),
+
+    % sum as many tiles as are ON
     procStructs(off, Structs, This),
-    write([N, Structs, This]), nl,
-    %% count2(off, Line, Sorted, Count2),
-    %% write(Count2), nl,
 
     N1 #= N + 1,
     pip(Mat, N1, Graph, Nx),
     Sol #= Nx + This.
-
-    %% Sol #= SolNx + Count2

@@ -1,5 +1,8 @@
 :- use_module(utils).
 
+sol1(1972648895).
+sol2(919).
+
 diff_values([_], []).
 diff_values([X, Y|Z], [XY|YZ]) :-
     XY #= Y - X,

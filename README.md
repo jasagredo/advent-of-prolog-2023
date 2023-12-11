@@ -32,3 +32,29 @@ ediprolog does not work for me on Windows:
 
 It shows on the minibuffer whether scryer complains on the current file, which
 makes it somewhat easier to find syntax errors and missing punctuation symbols.
+
+## Commentaries
+
+| Number | Part | Commentary                                                                                                  |
+|--------|------|-------------------------------------------------------------------------------------------------------------|
+| 1      | 1    | N/A                                                                                                         |
+| 1      | 2    | Solved just by ;'ed DCGs                                                                                    |
+| 2      | 1    | N/A                                                                                                         |
+| 2      | 2    | N/A                                                                                                         |
+| 3      | 1    | A bit more complex due to usage of big matrices, but can be parsed incrementally easily                     |
+| 3      | 2    | More complex state to carry                                                                                 |
+| 4      | 1    | N/A                                                                                                         |
+| 4      | 2    | N/A                                                                                                         |
+| 5      | 1    | Used `asserta` so quite bad practice but it works                                                           |
+| 5      | 2    | Needed to manually craft CLP(Z) domains and perform multiple intersections, not trivial                     |
+| 6      | 1    | Solved with labeling, a bit of math would have been faster                                                  |
+| 6      | 2    | Ditto                                                                                                       |
+| 7      | 1    | Boilerplate-y because we can't overload `compare`, had to create `assoc_by.pl`                              |
+| 7      | 2    | N/A                                                                                                         |
+| 8      | 1    | N/A                                                                                                         |
+| 8      | 2    | If I had not visualized the data on `circo` I might had gone the route of using dynamic programming/tabling |
+| 9      | 1    | N/A                                                                                                         |
+| 10     | 1    | N/A                                                                                                         |
+| 10     | 2    | Quite complicated to get the math right, using ray casting solves it                                        |
+| 11     | 1    | N/A                                                                                                         |
+| 11     | 2    | N/A                                                                                                         |
