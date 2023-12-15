@@ -58,3 +58,18 @@ makes it somewhat easier to find syntax errors and missing punctuation symbols.
 | 10     | 2    | Quite complicated to get the math right, using ray casting solves it                                        |
 | 11     | 1    | N/A                                                                                                         |
 | 11     | 2    | N/A                                                                                                         |
+| 12     | 1    | Easy to brute-force                                                                                         |
+| 12     | 2    | **UNSOLVED**                                                                   |
+
+> Disclaimer: I went back to read [The Power of
+> Prolog](https://www.metalevel.at/prolog) because I was feeling my answers were
+> A) not fast enough B) not declarative. From this point on I try to minimize
+> the use of custom "imperative" constructs I had in my `src/utils.pl` and
+> instead declare relations. The results are much faster programs.
+
+| Number | Part | Commentary                      |
+|--------|------|---------------------------------|
+| 13     | 1    | N/A                             |
+| 13     | 2    | Ah, a nice declarative solution |
+| 14     | 1    | N/A                             |
+| 14     | 2    | N/A                             |

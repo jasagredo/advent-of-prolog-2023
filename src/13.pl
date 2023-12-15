@@ -37,7 +37,6 @@ part1(F, Solution) :-
     maplist(matrix_to_value, Lines, Values),
     sum_list(Values, Solution).
 
-
 diff_1(tt, [], []).
 diff_1(ff, [X|Xs], [Y|Ys]) :- dif(X, Y), diff_1(tt, Xs, Ys).
 diff_1(T, [X|Xs], [X|Ys]) :- diff_1(T, Xs, Ys).
